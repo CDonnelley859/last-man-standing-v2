@@ -1,8 +1,8 @@
-const https = require('https');
+import https from 'https';
 
 const API_KEY = '07740c047e40400e9faebe27e75b11f5';
 
-module.exports = function handler(req, res) {
+export default function handler(req, res) {
     const endpoint = req.query.endpoint;
     if (!endpoint || !endpoint.startsWith('/')) {
         return res.status(400).json({ error: 'Invalid endpoint' });
