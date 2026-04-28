@@ -66,6 +66,20 @@ export default function App() {
       setG(data);
       GRef.current = data;
       const round = currentRound(data);
+
+      // Re-fetch fixture data if we're in a picking round but lost cachedMatchday (e.g. page refresh)
+      if (round?.status === 'picking' && round.matchday && !cachedMatchdayRef.current) {
+        fetchMatchdayMatches(round.matchday).then(matches => {
+          const fixture = { matchday: round.matchday, matches, firstKickoff: round.firstKickoff || null };
+          setCachedMatchday(fixture);
+          cachedMatchdayRef.current = fixture;
+        }).catch(() => {});
+      }
+      // Fetch team list if not already cached
+      if (!cachedTeamsRef.current) {
+        fetchTeams().then(t => { setCachedTeams(t); cachedTeamsRef.current = t; }).catch(() => {});
+      }
+
       if (rle === 'host') {
         if (round?.status === 'picking' && round.firstKickoff && !autoCloseRef.current) {
           scheduleAutoClose(round.firstKickoff, code, data);
@@ -251,7 +265,6 @@ export default function App() {
     const round = currentRound(G);
     if (!round || round.status !== 'picking' || !team) return;
     await set(ref(db, `games/${gameCode}/rounds/r${round.id}/picks/${myPlayerId}/team`), team);
-    await update(ref(db), { [`games/${gameCode}/players/${myPlayerId}/usedTeams/${team}`]: true });
   }
 
   async function handleEliminate(pid) {
@@ -433,7 +446,7 @@ export default function App() {
   }
 
   if (round.status === 'picking') {
-    return <PickScreen {...commonProps} cachedMatchday={cachedMatchday} onPick={handlePlayerPick} />;
+    return <PickScreen {...commonProps} cachedMatchday={cachedMatchday} teams={getTeams()} onPick={handlePlayerPick} />;
   }
 
   if (round.status === 'results') {

@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import { getPlayer, formatCountdown, formatMatchTime } from '../utils';
 import { getTeamColor, getTeamAbbr } from '../teams';
 
-export default function PickScreen({ G, gameCode, myPlayerId, role, round, cachedMatchday, onPick, onNav }) {
+export default function PickScreen({ G, gameCode, myPlayerId, role, round, cachedMatchday, teams, onPick, onNav }) {
   const myPick = (round?.picks || {})[myPlayerId];
   const myPlayer = getPlayer(G, myPlayerId);
   const usedTeams = myPlayer?.usedTeams || {};
@@ -51,8 +51,7 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
     }
   }
 
-  // All available teams from picks entry or fallback
-  const allTeams = Object.keys(usedTeams ? {} : {});
+  const allTeams = teams || [];
 
   return (
     <div style={{ ...SCREEN, position: 'relative' }}>
@@ -180,15 +179,36 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
             </div>
           </div>
         ) : (
-          // Fallback: simple team grid
+          // Fallback: team grid when no fixture data
           <div style={{ padding: '0 20px' }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
               CHOOSE YOUR TEAM
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
-              {Object.entries(usedTeams ? {} : {}).length === 0
-                ? null
-                : null}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 8 }}>
+              {allTeams.map(team => {
+                const used = !!usedTeams[team];
+                const sel = selectedTeam === team;
+                const color = getTeamColor(team);
+                const abbr = getTeamAbbr(team);
+                return (
+                  <div
+                    key={team}
+                    onClick={() => !used && handlePick(team)}
+                    style={{
+                      background: sel ? color : C.white,
+                      borderRadius: 10,
+                      padding: '10px 8px',
+                      textAlign: 'center',
+                      opacity: used ? 0.4 : 1,
+                      cursor: used ? 'default' : 'pointer',
+                      boxShadow: sel ? `0 0 0 3px ${color}, 0 4px 14px ${color}55` : '0 2px 8px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: `radial-gradient(circle at 35% 35%, ${color}cc, ${color})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 11, color: 'white', margin: '0 auto 4px' }}>{abbr}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: sel ? 'white' : C.dark, lineHeight: 1.2 }}>{team}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
