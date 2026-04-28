@@ -43,6 +43,7 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
   const [games, setGames] = useState([]);
   const [needsPick, setNeedsPick] = useState({});
   const [playerStatus, setPlayerStatus] = useState({});
+  const [sharedCode, setSharedCode] = useState(null);
 
   useEffect(() => {
     const saved = savedGames();
@@ -81,6 +82,20 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
       if (!hostName.trim()) { setError('Enter your name to create a game.'); return; }
       await onCreateGame(hostName.trim(), gameName.trim());
     }
+  }
+
+  async function handleShareCode(e, code) {
+    e.stopPropagation();
+    const url = `${location.origin}${location.pathname}?join=${code}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Join my Last Man Standing game', text: `Use code ${code} to join!`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setSharedCode(code);
+        setTimeout(() => setSharedCode(null), 1800);
+      }
+    } catch { /* dismissed */ }
   }
 
   return (
@@ -145,8 +160,12 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
                           }}
                         >⚙ ADMIN</button>
                       )}
-                      <div style={{ background: C.teal, color: C.white, borderRadius: '8px 8px 8px 2px', padding: '4px 9px', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(28,191,160,0.45)' }}>
-                        {g.code}
+                      <div
+                        onClick={e => handleShareCode(e, g.code)}
+                        style={{ background: sharedCode === g.code ? '#16a37a' : C.teal, color: C.white, borderRadius: '8px 8px 8px 2px', padding: '4px 9px', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(28,191,160,0.45)', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }}
+                        title="Tap to share join link"
+                      >
+                        {sharedCode === g.code ? '✓ COPIED' : g.code}
                       </div>
                     </div>
                   </div>
