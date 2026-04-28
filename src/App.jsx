@@ -516,7 +516,7 @@ export default function App() {
   }
 
   if (playerSubView === 'stats') {
-    return <><StatsScreen {...commonProps} cachedMatchday={cachedMatchday} />{Toast}</>;
+    return <><StatsScreen {...commonProps} cachedMatchday={cachedMatchday} onLeave={role !== 'host' ? handleLeave : undefined} />{Toast}</>;
   }
 
   if (!myPlayer?.active) {

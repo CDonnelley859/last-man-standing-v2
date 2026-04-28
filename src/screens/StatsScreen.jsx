@@ -210,7 +210,7 @@ function PickHistoryTab({ G, myPlayerId }) {
 
 const TABS = ['Leaderboard', 'Season Stats', 'Pick History'];
 
-export default function StatsScreen({ G, myPlayerId, role, cachedMatchday, onNav }) {
+export default function StatsScreen({ G, myPlayerId, role, cachedMatchday, onLeave, onNav }) {
   const [tab, setTab] = useState('Leaderboard');
 
   return (
@@ -239,6 +239,23 @@ export default function StatsScreen({ G, myPlayerId, role, cachedMatchday, onNav
         {tab === 'Leaderboard' && <LeaderboardTab G={G} myPlayerId={myPlayerId} />}
         {tab === 'Season Stats' && <SeasonStatsTab G={G} />}
         {tab === 'Pick History' && <PickHistoryTab G={G} myPlayerId={myPlayerId} />}
+
+        {/* Leave game — players only */}
+        {role !== 'host' && onLeave && (
+          <div style={{ padding: '8px 20px 100px' }}>
+            <button
+              onClick={onLeave}
+              style={{
+                width: '100%', padding: '13px 0', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+                fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 12,
+                letterSpacing: '0.08em', cursor: 'pointer',
+              }}
+            >
+              LEAVE GAME
+            </button>
+          </div>
+        )}
       </div>
 
       <BottomNav active="stats" onNav={onNav} isHost={role === 'host'} />
