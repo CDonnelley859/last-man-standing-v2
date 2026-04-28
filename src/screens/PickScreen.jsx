@@ -1,31 +1,51 @@
 import { useState, useEffect, useRef } from 'react';
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import Card from '../components/Card';
 import { getPlayer, formatCountdown, formatMatchTime } from '../utils';
 import { getTeamColor, getTeamAbbr } from '../teams';
 
-export default function PickScreen({ G, gameCode, myPlayerId, role, round, cachedMatchday, teams, onPick, onNav }) {
+export default function PickScreen({ G, gameCode, myPlayerId, role, round, cachedMatchday, teams, pickPrefs, onPick, onUpdatePickPrefs, onNav }) {
   const myPick = (round?.picks || {})[myPlayerId];
   const myPlayer = getPlayer(G, myPlayerId);
   const usedTeams = myPlayer?.usedTeams || {};
   const [countdown, setCountdown] = useState('');
   const [confirmed, setConfirmed] = useState(null);
+  const [animKey, setAnimKey] = useState(0);
+  const [showPrefs, setShowPrefs] = useState(false);
   const timerRef = useRef(null);
 
+  // Derive closeTime from stored value or calculate from firstKickoff
+  const closeTime = round?.closeTime ||
+    (round?.firstKickoff ? new Date(new Date(round.firstKickoff).getTime() - 60 * 60 * 1000).toISOString() : null);
+
   useEffect(() => {
-    if (!round?.closeTime) return;
-    const tick = () => setCountdown(formatCountdown(new Date(round.closeTime) - Date.now()));
+    if (!closeTime) return;
+    const tick = () => setCountdown(formatCountdown(new Date(closeTime) - Date.now()));
     tick();
     timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current);
-  }, [round?.closeTime]);
+  }, [closeTime]);
 
-  async function handlePick(team, fi, side) {
+  async function handlePick(team) {
     if (!team) return;
     setConfirmed(team);
+    setAnimKey(k => k + 1);
     await onPick(team);
+  }
+
+  // Auto-pick preferences
+  const currentPrefs = pickPrefs || [];
+  const prefCandidates = (teams || []).filter(t => !usedTeams[t] && !currentPrefs.includes(t));
+
+  function addPref(team) {
+    if (!onUpdatePickPrefs) return;
+    onUpdatePickPrefs([...currentPrefs, team]);
+  }
+  function removePref(team) {
+    if (!onUpdatePickPrefs) return;
+    onUpdatePickPrefs(currentPrefs.filter(t => t !== team));
   }
 
   // Build fixture pairs from API data
@@ -55,10 +75,18 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
 
   return (
     <div style={{ ...SCREEN, position: 'relative' }}>
+      <style>{`
+        @keyframes pickConfirm {
+          0%   { transform: scale(1); }
+          35%  { transform: scale(1.28); }
+          65%  { transform: scale(0.93); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
       <DotBg />
       <div style={{ position: 'absolute', top: -50, left: '50%', transform: 'translateX(-50%)', width: 260, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', filter: 'blur(45px)', pointerEvents: 'none' }} />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '54px 0 0' }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '54px 0 0' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           {cachedMatchday && (
@@ -82,12 +110,13 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: C.lime }}>
             {selectedTeam ? 'TEAM SELECTED' : 'NO PICK YET'}
           </div>
-          <div style={{
+          <div key={animKey} style={{
             width: 72, height: 72, borderRadius: '50%',
             background: `radial-gradient(circle at 35% 35%, ${selectedColor}cc, ${selectedColor})`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontWeight: 900, fontSize: 24, color: 'white',
             boxShadow: `0 4px 20px ${selectedColor}55, 0 0 0 3px rgba(255,255,255,0.18)`,
+            animation: animKey > 0 ? 'pickConfirm 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
           }}>
             {selectedAbbr}
           </div>
@@ -210,6 +239,76 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Auto-pick preferences */}
+        {onUpdatePickPrefs && (
+          <div style={{ padding: '12px 20px 0' }}>
+            <button
+              onClick={() => setShowPrefs(p => !p)}
+              style={{
+                width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 10, padding: '10px 16px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter, sans-serif',
+                fontWeight: 600, fontSize: 12, backdropFilter: 'blur(8px)',
+              }}
+            >
+              <span>⚙ Auto-pick order{currentPrefs.length > 0 ? ` (${currentPrefs.length} set)` : ''}</span>
+              <span style={{ fontSize: 9 }}>{showPrefs ? '▲' : '▼'}</span>
+            </button>
+
+            {showPrefs && (
+              <div style={{ marginTop: 8, background: 'rgba(0,0,0,0.25)', borderRadius: 12, padding: 14, backdropFilter: 'blur(8px)' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginBottom: 12, lineHeight: 1.55 }}>
+                  If you don't pick in time, we'll auto-pick the first available team from this list.
+                </div>
+
+                {currentPrefs.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
+                    {currentPrefs.map((team, idx) => (
+                      <div key={team} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: '7px 10px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: C.lime, width: 16, flexShrink: 0 }}>{idx + 1}</span>
+                        <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: C.white }}>{team}</span>
+                        <button
+                          onClick={() => removePref(team)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.45)', fontSize: 16, padding: '0 2px', lineHeight: 1, fontFamily: 'Inter, sans-serif' }}
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 12, fontStyle: 'italic' }}>
+                    Tap teams below to set your backup order.
+                  </div>
+                )}
+
+                {prefCandidates.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', marginBottom: 7 }}>TAP TO ADD</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {prefCandidates.map(team => (
+                        <button
+                          key={team}
+                          onClick={() => addPref(team)}
+                          style={{
+                            background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)',
+                            borderRadius: 8, padding: '5px 10px', cursor: 'pointer',
+                            fontSize: 11, fontWeight: 600, color: C.white,
+                            fontFamily: 'Inter, sans-serif',
+                          }}
+                        >+ {team}</button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {prefCandidates.length === 0 && currentPrefs.length > 0 && (
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>All available teams added.</div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

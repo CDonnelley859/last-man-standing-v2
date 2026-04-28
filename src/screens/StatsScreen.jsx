@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import SegTabs from '../components/SegTabs';
@@ -218,7 +218,7 @@ export default function StatsScreen({ G, myPlayerId, role, cachedMatchday, onNav
       <DotBg />
       <div style={{ position: 'absolute', top: -40, right: -20, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ padding: '56px 24px 16px' }}>
           <div style={{ fontSize: 38, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>STANDINGS</div>

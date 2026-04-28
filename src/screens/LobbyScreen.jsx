@@ -1,4 +1,4 @@
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import Card from '../components/Card';
@@ -10,7 +10,7 @@ export default function LobbyScreen({ G, gameCode, myPlayerId, role, onLeave, on
   return (
     <div style={{ ...SCREEN, position: 'relative' }}>
       <DotBg />
-      <div style={{ position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
 
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 38, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>LOBBY</div>

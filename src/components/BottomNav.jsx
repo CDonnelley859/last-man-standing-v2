@@ -12,7 +12,10 @@ export default function BottomNav({ active, onNav, isHost }) {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 16, left: 16, right: 16, height: 64,
+      position: 'fixed', bottom: 16,
+      left: 'max(16px, calc(50vw - 224px))',
+      right: 'max(16px, calc(50vw - 224px))',
+      height: 64,
       borderRadius: 20,
       background: 'linear-gradient(180deg, #1e1e1e 0%, #111 100%)',
       boxShadow: '0 -1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.5)',

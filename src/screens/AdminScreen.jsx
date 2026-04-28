@@ -1,4 +1,4 @@
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import Card from '../components/Card';
@@ -238,14 +238,14 @@ export default function AdminScreen({
       <div style={{ position: 'relative', zIndex: 1, padding: '56px 0 0' }}>
 
         {/* Hero */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <div style={{ ...WRAP, textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 38, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>ADMIN</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 5 }}>
             {G.gameName || gameCode}{round ? ` · Round ${round.id}` : ''}
           </div>
         </div>
 
-        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ ...WRAP, padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
           {/* Round control card */}
           {renderRoundControl()}

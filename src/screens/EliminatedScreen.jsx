@@ -1,4 +1,4 @@
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import { getPlayer } from '../utils';
@@ -10,7 +10,7 @@ export default function EliminatedScreen({ G, myPlayerId, role, onNav }) {
   return (
     <div style={{ ...SCREEN, position: 'relative' }}>
       <DotBg />
-      <div style={{ position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
 
         {/* Survival status */}
         <div style={{

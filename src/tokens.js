@@ -28,3 +28,6 @@ export const SCREEN = {
   paddingBottom: 96,
   overflowX: 'hidden',
 };
+
+// Centres content at max 480 px on desktop — spread into the inner content div of each screen
+export const WRAP = { maxWidth: 480, margin: '0 auto' };

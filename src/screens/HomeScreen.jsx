@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import Card from '../components/Card';
@@ -62,7 +62,7 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame })
       <DotBg />
       <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 300, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
-      <div style={{ position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
         {/* Hero */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>LAST MAN</div>

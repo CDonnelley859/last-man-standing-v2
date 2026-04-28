@@ -1,4 +1,4 @@
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import Card from '../components/Card';
@@ -28,7 +28,7 @@ export default function RoundDoneScreen({ G, gameCode, myPlayerId, role, round, 
   return (
     <div style={{ ...SCREEN, position: 'relative' }}>
       <DotBg />
-      <div style={{ position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
 
         {/* Status banner */}
         <div style={{

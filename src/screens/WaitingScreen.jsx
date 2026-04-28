@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { C, BG, SCREEN } from '../tokens';
+import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
 import { getPlayer, formatCountdown } from '../utils';
@@ -11,18 +11,22 @@ export default function WaitingScreen({ G, myPlayerId, role, round, message, onN
   const [countdown, setCountdown] = useState('');
   const timerRef = useRef(null);
 
+  // Derive closeTime from stored value or calculate from firstKickoff (1 hour before)
+  const closeTime = round?.closeTime ||
+    (round?.firstKickoff ? new Date(new Date(round.firstKickoff).getTime() - 60 * 60 * 1000).toISOString() : null);
+
   useEffect(() => {
-    if (!round?.closeTime || round?.status !== 'picking') return;
-    const tick = () => setCountdown(formatCountdown(new Date(round.closeTime) - Date.now()));
+    if (!closeTime || round?.status !== 'picking') return;
+    const tick = () => setCountdown(formatCountdown(new Date(closeTime) - Date.now()));
     tick();
     timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current);
-  }, [round?.closeTime, round?.status]);
+  }, [closeTime, round?.status]);
 
   return (
     <div style={{ ...SCREEN, position: 'relative' }}>
       <DotBg />
-      <div style={{ position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
+      <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
 
         {/* Survival status */}
         <div style={{
@@ -39,7 +43,7 @@ export default function WaitingScreen({ G, myPlayerId, role, round, message, onN
         </div>
 
         {/* Countdown if round is open */}
-        {round?.closeTime && round?.status === 'picking' && (
+        {closeTime && round?.status === 'picking' && (
           <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 12, padding: '10px 16px', textAlign: 'center', backdropFilter: 'blur(8px)', marginBottom: 16 }}>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>PICKS CLOSE IN</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: C.white, letterSpacing: 2 }}>{countdown}</div>

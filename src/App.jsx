@@ -18,6 +18,7 @@ import WaitingScreen from './screens/WaitingScreen';
 import EliminatedScreen from './screens/EliminatedScreen';
 import RoundDoneScreen from './screens/RoundDoneScreen';
 import CompleteScreen from './screens/CompleteScreen';
+import CycleWinScreen from './screens/CycleWinScreen';
 
 export default function App() {
   const [gameCode, setGameCode] = useState(null);
@@ -34,14 +35,23 @@ export default function App() {
   const [liveDataError, setLiveDataError] = useState(null);
   const [lastResultsCheck, setLastResultsCheck] = useState(null);
 
+  const [toast, setToast] = useState(null);
+
   const listenerRef = useRef(null);
   const autoCloseRef = useRef(null);
   const pollingRef = useRef(null);
+  const toastTimerRef = useRef(null);
   // Mutable refs to avoid stale closures in timers
   const GRef = useRef(null);
   const gameCodeRef = useRef(null);
   const cachedMatchdayRef = useRef(null);
   const cachedTeamsRef = useRef(null);
+
+  function showToast(msg) {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(msg);
+    toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+  }
 
   useEffect(() => { migrateLegacyLocalStorage(); }, []);
 
@@ -180,11 +190,26 @@ export default function App() {
       const roundNum = rounds(G).length + 1;
       const picks = {};
       activePlayers(G).forEach(p => { picks[p.id] = { playerId: p.id, team: null, result: null }; });
+      // Store closeTime (1 hr before first kick-off) in Firebase so all clients can display countdown
+      const closeTime = fixture.firstKickoff
+        ? new Date(new Date(fixture.firstKickoff).getTime() - 60 * 60 * 1000).toISOString()
+        : null;
       await set(ref(db, `games/${gameCode}/rounds/r${roundNum}`), {
         id: roundNum, status: 'picking', picks, winningTeams: {},
         matchday: fixture.matchday, firstKickoff: fixture.firstKickoff || null,
+        closeTime,
       });
       scheduleAutoClose(fixture.firstKickoff, gameCode, G);
+      // Auto-copy a WhatsApp-ready message for players
+      try {
+        const url = `${location.origin}${location.pathname}?join=${gameCode}`;
+        const deadlineStr = closeTime
+          ? new Date(closeTime).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+          : 'kick-off';
+        const msg = `⚽ Last Man Standing — Gameweek ${fixture.matchday} is open!\n\nPick your team before ${deadlineStr}:\n${url}\n\nReply here when you've picked! 👍`;
+        await navigator.clipboard.writeText(msg);
+        showToast('📋 Player message copied — paste it into WhatsApp!');
+      } catch { /* clipboard unavailable */ }
     } catch (e) {
       setLiveDataError('Could not fetch fixtures. Check your API key.');
     }
@@ -267,6 +292,11 @@ export default function App() {
     await set(ref(db, `games/${gameCode}/rounds/r${round.id}/picks/${myPlayerId}/team`), team);
   }
 
+  async function handleUpdatePickPrefs(prefs) {
+    if (!myPlayerId || !gameCode) return;
+    await set(ref(db, `games/${gameCode}/players/${myPlayerId}/pickPrefs`), prefs.length ? prefs : null);
+  }
+
   async function handleEliminate(pid) {
     const p = getPlayer(G, pid);
     if (!confirm(`Manually eliminate ${p?.name}? You can reinstate them later.`)) return;
@@ -336,7 +366,9 @@ export default function App() {
     picks.filter(p => !p.team).forEach(pick => {
       const player = getPlayer(gameData, pick.playerId);
       const usedTeams = player?.usedTeams || {};
-      const firstFree = teams.find(t => !usedTeams[t]);
+      const prefs = player?.pickPrefs || [];
+      // Honour the player's ranked preference list; fall back to alphabetical
+      const firstFree = prefs.find(t => !usedTeams[t]) || teams.find(t => !usedTeams[t]);
       if (firstFree) {
         updates[`games/${code}/rounds/r${round.id}/picks/${pick.playerId}/team`] = firstFree;
         updates[`games/${code}/rounds/r${round.id}/picks/${pick.playerId}/autoPicked`] = true;
@@ -400,8 +432,19 @@ export default function App() {
 
   // ── Routing ──────────────────────────────────────────────────────────────────
 
+  // Toast overlay — fixed on top of whatever screen is showing
+  const Toast = toast ? (
+    <div style={{
+      position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 9999, background: '#111', color: '#fff',
+      padding: '11px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.55)', whiteSpace: 'nowrap',
+      fontFamily: 'Inter, sans-serif', pointerEvents: 'none',
+    }}>{toast}</div>
+  ) : null;
+
   if (!gameCode || !G) {
-    return <HomeScreen onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} onContinueGame={handleContinueGame} />;
+    return <><HomeScreen onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} onContinueGame={handleContinueGame} />{Toast}</>;
   }
 
   const round = currentRound(G);
@@ -409,53 +452,71 @@ export default function App() {
   const commonProps = { G, gameCode, myPlayerId, role, round, onNav: handleNav };
 
   if (G.status === 'complete') {
-    return <CompleteScreen {...commonProps} onReset={handleReset} onLeave={handleLeave} />;
+    return <><CompleteScreen {...commonProps} onReset={handleReset} onLeave={handleLeave} />{Toast}</>;
   }
 
   if (G.status === 'setup') {
     if (role === 'host') {
-      return <SetupScreen {...commonProps} onStartGame={handleStartGame} onRemovePlayer={handleRemovePlayer} onCopyLink={handleCopyLink} onReset={handleReset} />;
+      return <><SetupScreen {...commonProps} onStartGame={handleStartGame} onRemovePlayer={handleRemovePlayer} onCopyLink={handleCopyLink} onReset={handleReset} />{Toast}</>;
     }
-    return <LobbyScreen {...commonProps} onLeave={handleLeave} />;
+    return <><LobbyScreen {...commonProps} onLeave={handleLeave} />{Toast}</>;
   }
 
   if (role === 'host' && hostView === 'admin') {
     return (
-      <AdminScreen {...commonProps}
-        cachedMatchday={cachedMatchday} liveDataError={liveDataError} lastResultsCheck={lastResultsCheck}
-        onActivateGameweek={handleActivateGameweek} onStartRound={handleStartRound}
-        onLockPicks={handleLockPicks} onSubmitResults={handleSubmitResults}
-        onEliminate={handleEliminate} onReinstate={handleReinstate}
-        onReset={handleReset} onCopyLink={handleCopyLink} onReminder={handleReminder}
-        onRefreshResults={handleRefreshResults}
-        onSwitchToPlayer={() => { setHostView('player'); setPlayerSubView('main'); }}
-      />
+      <>
+        <AdminScreen {...commonProps}
+          cachedMatchday={cachedMatchday} liveDataError={liveDataError} lastResultsCheck={lastResultsCheck}
+          onActivateGameweek={handleActivateGameweek} onStartRound={handleStartRound}
+          onLockPicks={handleLockPicks} onSubmitResults={handleSubmitResults}
+          onEliminate={handleEliminate} onReinstate={handleReinstate}
+          onReset={handleReset} onCopyLink={handleCopyLink} onReminder={handleReminder}
+          onRefreshResults={handleRefreshResults}
+          onSwitchToPlayer={() => { setHostView('player'); setPlayerSubView('main'); }}
+        />
+        {Toast}
+      </>
     );
   }
 
   if (playerSubView === 'stats') {
-    return <StatsScreen {...commonProps} cachedMatchday={cachedMatchday} />;
+    return <><StatsScreen {...commonProps} cachedMatchday={cachedMatchday} />{Toast}</>;
   }
 
   if (!myPlayer?.active) {
-    return <EliminatedScreen {...commonProps} />;
+    return <><EliminatedScreen {...commonProps} />{Toast}</>;
   }
 
   if (!round) {
-    return <WaitingScreen {...commonProps} message="Waiting for the host to start the next round…" />;
+    return <><WaitingScreen {...commonProps} message="Waiting for the host to start the next round…" />{Toast}</>;
   }
 
   if (round.status === 'picking') {
-    return <PickScreen {...commonProps} cachedMatchday={cachedMatchday} teams={getTeams()} onPick={handlePlayerPick} />;
+    return (
+      <>
+        <PickScreen
+          {...commonProps}
+          cachedMatchday={cachedMatchday}
+          teams={getTeams()}
+          pickPrefs={myPlayer?.pickPrefs || []}
+          onPick={handlePlayerPick}
+          onUpdatePickPrefs={handleUpdatePickPrefs}
+        />
+        {Toast}
+      </>
+    );
   }
 
   if (round.status === 'results') {
-    return <WaitingScreen {...commonProps} message="Results are being processed. Hang tight…" />;
+    return <><WaitingScreen {...commonProps} message="Results are being processed. Hang tight…" />{Toast}</>;
   }
 
   if (round.status === 'done') {
-    return <RoundDoneScreen {...commonProps} />;
+    if (round.cycleWinner === myPlayerId) {
+      return <><CycleWinScreen {...commonProps} />{Toast}</>;
+    }
+    return <><RoundDoneScreen {...commonProps} />{Toast}</>;
   }
 
-  return <WaitingScreen {...commonProps} message="Waiting…" />;
+  return <><WaitingScreen {...commonProps} message="Waiting…" />{Toast}</>;
 }
