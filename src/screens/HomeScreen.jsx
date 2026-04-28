@@ -79,7 +79,7 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
                 <Card
                   key={g.code}
                   accent={g.role === 'host' ? 'lime' : 'teal'}
-                  onClick={() => onContinueGame(g.code)}
+                  onClick={() => onContinueGame(g.code, g.role === 'host' ? 'player' : null)}
                   style={{ padding: '13px 16px 13px 20px', cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
