@@ -221,13 +221,13 @@ export default function StatsScreen({ G, myPlayerId, role, cachedMatchday, onNav
       <div style={{ ...WRAP, position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ padding: '56px 24px 16px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>STANDINGS</div>
           {G?.gameName && (
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
+            <div style={{ fontSize: 38, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 4 }}>
               {G.gameName}
             </div>
           )}
-          <div style={{ fontSize: 38, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>STANDINGS</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 5 }}>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
             {cachedMatchday ? `Gameweek ${cachedMatchday.matchday} · ` : ''}Season 2024/25
           </div>
         </div>

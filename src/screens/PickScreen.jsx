@@ -89,17 +89,17 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
       <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '54px 0 0' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          {G?.gameName && (
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', marginBottom: 2 }}>
-              {G.gameName}
-            </div>
-          )}
           {cachedMatchday && (
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.6)', marginBottom: 3 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
               GAMEWEEK {cachedMatchday.matchday}
             </div>
           )}
-          <div style={{ fontSize: 26, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>SELECT YOUR TEAM</div>
+          {G?.gameName && (
+            <div style={{ fontSize: 22, fontWeight: 900, color: C.white, letterSpacing: '-0.01em', lineHeight: 1.1, marginBottom: 4 }}>
+              {G.gameName}
+            </div>
+          )}
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.5)' }}>SELECT YOUR TEAM</div>
         </div>
 
         {/* Countdown */}

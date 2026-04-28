@@ -42,6 +42,7 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
   const [error, setError] = useState('');
   const [games, setGames] = useState([]);
   const [needsPick, setNeedsPick] = useState({});
+  const [playerStatus, setPlayerStatus] = useState({});
 
   useEffect(() => {
     const saved = savedGames();
@@ -49,13 +50,19 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
     const urlCode = new URLSearchParams(window.location.search).get('join');
     if (urlCode) { setMode('join'); setJoinCode(urlCode.toUpperCase().slice(0, 4)); }
 
-    // Check each saved game for a pending pick
     saved.forEach(async g => {
       if (!g.pid) return;
       try {
-        const snap = await get(ref(db, `games/${g.code}/rounds`));
-        if (!snap.exists()) return;
-        const allRounds = Object.values(snap.val()).sort((a, b) => a.id - b.id);
+        // Check player alive/eliminated status
+        const playerSnap = await get(ref(db, `games/${g.code}/players/${g.pid}`));
+        if (playerSnap.exists()) {
+          const p = playerSnap.val();
+          setPlayerStatus(prev => ({ ...prev, [g.code]: p.active ? 'alive' : 'eliminated' }));
+        }
+        // Check for a pending pick
+        const roundsSnap = await get(ref(db, `games/${g.code}/rounds`));
+        if (!roundsSnap.exists()) return;
+        const allRounds = Object.values(roundsSnap.val()).sort((a, b) => a.id - b.id);
         const round = allRounds[allRounds.length - 1];
         if (round?.status === 'picking') {
           const pick = (round.picks || {})[g.pid];
@@ -115,9 +122,15 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
                           <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', flexShrink: 0, animation: 'pickPulse 1.5s ease-in-out infinite' }} />
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: C.g4 }}>
-                        {g.role === 'host' ? 'Host' : g.name}
-                        {needsPick[g.code] && <span style={{ color: '#f59e0b', fontWeight: 700, marginLeft: 6 }}>· Pick needed</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: C.g4 }}>{g.role === 'host' ? 'Host' : g.name}</span>
+                        {g.role !== 'host' && playerStatus[g.code] === 'alive' && (
+                          <span style={{ fontSize: 9, fontWeight: 700, color: '#1cbfa0', letterSpacing: '0.06em' }}>● ALIVE</span>
+                        )}
+                        {g.role !== 'host' && playerStatus[g.code] === 'eliminated' && (
+                          <span style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}>✕ OUT</span>
+                        )}
+                        {needsPick[g.code] && <span style={{ fontSize: 9, color: '#f59e0b', fontWeight: 700, letterSpacing: '0.04em' }}>· Pick needed</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
