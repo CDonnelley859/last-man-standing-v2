@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { ref, get } from 'firebase/database';
+import { db } from '../firebase';
 import { C, BG, SCREEN, WRAP } from '../tokens';
 import DotBg from '../components/DotBg';
 import BottomNav from '../components/BottomNav';
@@ -39,11 +41,28 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
   const [hostName, setHostName] = useState('');
   const [error, setError] = useState('');
   const [games, setGames] = useState([]);
+  const [needsPick, setNeedsPick] = useState({});
 
   useEffect(() => {
-    setGames(savedGames());
+    const saved = savedGames();
+    setGames(saved);
     const urlCode = new URLSearchParams(window.location.search).get('join');
     if (urlCode) { setMode('join'); setJoinCode(urlCode.toUpperCase().slice(0, 4)); }
+
+    // Check each saved game for a pending pick
+    saved.forEach(async g => {
+      if (!g.pid) return;
+      try {
+        const snap = await get(ref(db, `games/${g.code}/rounds`));
+        if (!snap.exists()) return;
+        const allRounds = Object.values(snap.val()).sort((a, b) => a.id - b.id);
+        const round = allRounds[allRounds.length - 1];
+        if (round?.status === 'picking') {
+          const pick = (round.picks || {})[g.pid];
+          if (!pick?.team) setNeedsPick(prev => ({ ...prev, [g.code]: true }));
+        }
+      } catch {}
+    });
   }, []);
 
   async function handleSubmit() {
@@ -62,6 +81,12 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
       <DotBg />
       <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 300, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
+      <style>{`
+        @keyframes pickPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.25); }
+        }
+      `}</style>
       <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
         {/* Hero */}
         <div style={{ marginBottom: 24 }}>
@@ -84,8 +109,16 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 800, fontSize: 14, color: C.dark, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.gameName || g.code}</div>
-                      <div style={{ fontSize: 11, color: C.g4 }}>{g.role === 'host' ? 'Host' : g.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                        <span style={{ fontWeight: 800, fontSize: 14, color: C.dark, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.gameName || g.code}</span>
+                        {needsPick[g.code] && (
+                          <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', flexShrink: 0, animation: 'pickPulse 1.5s ease-in-out infinite' }} />
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.g4 }}>
+                        {g.role === 'host' ? 'Host' : g.name}
+                        {needsPick[g.code] && <span style={{ color: '#f59e0b', fontWeight: 700, marginLeft: 6 }}>· Pick needed</span>}
+                      </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                       {g.role === 'host' && (

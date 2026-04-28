@@ -89,6 +89,11 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
       <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '54px 0 0' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          {G?.gameName && (
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', marginBottom: 2 }}>
+              {G.gameName}
+            </div>
+          )}
           {cachedMatchday && (
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.6)', marginBottom: 3 }}>
               GAMEWEEK {cachedMatchday.matchday}
@@ -98,7 +103,7 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
         </div>
 
         {/* Countdown */}
-        {round?.closeTime && (
+        {closeTime && (
           <div style={{ margin: '0 20px 16px', background: 'rgba(0,0,0,0.25)', borderRadius: 12, padding: '10px 16px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>PICKS CLOSE IN</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: C.white, letterSpacing: 2 }}>{countdown}</div>
@@ -158,7 +163,7 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                     overflow: 'hidden',
                   }}>
                     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 38%)' }} />
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px 6px', gap: 6 }}>
                       {/* Home */}
                       <div
                         onClick={() => !homeUsed && handlePick(homeName)}
@@ -174,7 +179,10 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                         }}>
                           {homeAbbr}
                         </div>
-                        <span style={{ fontWeight: 800, fontSize: 12, color: C.dark, lineHeight: 1.2 }}>{homeName}</span>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: 12, color: C.dark, lineHeight: 1.3 }}>{homeName}</div>
+                          <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: C.g3 }}>HOME</div>
+                        </div>
                       </div>
 
                       <span style={{ fontSize: 9, color: C.g3, fontWeight: 600, flexShrink: 0, padding: '0 2px' }}>vs</span>
@@ -184,7 +192,10 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                         onClick={() => !awayUsed && handlePick(awayName)}
                         style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end', cursor: awayUsed ? 'default' : 'pointer', opacity: awayUsed ? 0.4 : 1 }}
                       >
-                        <span style={{ fontWeight: 800, fontSize: 12, color: C.dark, lineHeight: 1.2, textAlign: 'right' }}>{awayName}</span>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontWeight: 800, fontSize: 12, color: C.dark, lineHeight: 1.3 }}>{awayName}</div>
+                          <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', color: C.g3 }}>AWAY</div>
+                        </div>
                         <div style={{
                           width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
                           background: `radial-gradient(circle at 35% 35%, ${awayColor}cc, ${awayColor})`,
@@ -197,6 +208,13 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                         </div>
                       </div>
                     </div>
+
+                    {/* Kickoff time */}
+                    {fx.utcDate && (
+                      <div style={{ padding: '0 14px 8px', textAlign: 'center', fontSize: 9, color: C.g4, fontWeight: 500 }}>
+                        {new Date(fx.utcDate).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
                     {(homeUsed || awayUsed) && (
                       <div style={{ fontSize: 9, color: C.g3, textAlign: 'center', paddingBottom: 4 }}>
                         {homeUsed && awayUsed ? 'Both teams already used' : homeUsed ? `${homeName} already used` : `${awayName} already used`}
