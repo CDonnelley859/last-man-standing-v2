@@ -158,7 +158,7 @@ export default function App() {
     listenToGame(code, 'player');
   }
 
-  async function handleContinueGame(code) {
+  async function handleContinueGame(code, targetTab = null) {
     const saved = savedGames().find(g => g.code === code);
     if (!saved) return;
     const snap = await get(ref(db, `games/${code}`));
@@ -166,7 +166,14 @@ export default function App() {
     const gameData = snap.val();
     if (saved.pid && saved.role === 'player' && !(gameData.players || {})[saved.pid]) { removeGame(code); return; }
     setGameCode(code); setRole(saved.role); setMyPlayerId(saved.pid); setMyName(saved.name);
-    setHostView('admin'); setPlayerSubView('main');
+    // targetTab lets the HomeScreen nav jump straight to a specific view
+    if (targetTab === 'stats') {
+      setHostView('player'); setPlayerSubView('stats');
+    } else if (targetTab === 'pick') {
+      setHostView('player'); setPlayerSubView('main');
+    } else {
+      setHostView('admin'); setPlayerSubView('main');
+    }
     listenToGame(code, saved.role);
   }
 
@@ -432,6 +439,26 @@ export default function App() {
 
   // ── Routing ──────────────────────────────────────────────────────────────────
 
+  // Thin admin bar shown when a host is browsing in player view — lets them flip back
+  const AdminBar = (role === 'host' && typeof hostView !== 'undefined' && hostView === 'player') ? (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 500,
+      background: 'rgba(17,17,17,0.96)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '6px 16px', fontFamily: 'Inter, sans-serif',
+    }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em' }}>HOST — PLAYER VIEW</span>
+      <button
+        onClick={() => { setHostView('admin'); setPlayerSubView('main'); }}
+        style={{
+          background: '#C8F06A', color: '#111', border: 'none', cursor: 'pointer',
+          padding: '4px 12px', borderRadius: 7, fontFamily: 'Inter, sans-serif',
+          fontWeight: 800, fontSize: 10, letterSpacing: '0.06em',
+        }}
+      >⚙ ADMIN</button>
+    </div>
+  ) : null;
+
   // Toast overlay — fixed on top of whatever screen is showing
   const Toast = toast ? (
     <div style={{
@@ -444,7 +471,7 @@ export default function App() {
   ) : null;
 
   if (!gameCode || !G) {
-    return <><HomeScreen onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} onContinueGame={handleContinueGame} />{Toast}</>;
+    return <><HomeScreen onCreateGame={handleCreateGame} onJoinGame={handleJoinGame} onContinueGame={(code, tab) => handleContinueGame(code, tab)} />{Toast}</>;
   }
 
   const round = currentRound(G);
@@ -480,15 +507,15 @@ export default function App() {
   }
 
   if (playerSubView === 'stats') {
-    return <><StatsScreen {...commonProps} cachedMatchday={cachedMatchday} />{Toast}</>;
+    return <><StatsScreen {...commonProps} cachedMatchday={cachedMatchday} />{AdminBar}{Toast}</>;
   }
 
   if (!myPlayer?.active) {
-    return <><EliminatedScreen {...commonProps} />{Toast}</>;
+    return <><EliminatedScreen {...commonProps} />{AdminBar}{Toast}</>;
   }
 
   if (!round) {
-    return <><WaitingScreen {...commonProps} message="Waiting for the host to start the next round…" />{Toast}</>;
+    return <><WaitingScreen {...commonProps} message="Waiting for the host to start the next round…" />{AdminBar}{Toast}</>;
   }
 
   if (round.status === 'picking') {
@@ -502,21 +529,21 @@ export default function App() {
           onPick={handlePlayerPick}
           onUpdatePickPrefs={handleUpdatePickPrefs}
         />
-        {Toast}
+        {AdminBar}{Toast}
       </>
     );
   }
 
   if (round.status === 'results') {
-    return <><WaitingScreen {...commonProps} message="Results are being processed. Hang tight…" />{Toast}</>;
+    return <><WaitingScreen {...commonProps} message="Results are being processed. Hang tight…" />{AdminBar}{Toast}</>;
   }
 
   if (round.status === 'done') {
     if (round.cycleWinner === myPlayerId) {
-      return <><CycleWinScreen {...commonProps} />{Toast}</>;
+      return <><CycleWinScreen {...commonProps} />{AdminBar}{Toast}</>;
     }
-    return <><RoundDoneScreen {...commonProps} />{Toast}</>;
+    return <><RoundDoneScreen {...commonProps} />{AdminBar}{Toast}</>;
   }
 
-  return <><WaitingScreen {...commonProps} message="Waiting…" />{Toast}</>;
+  return <><WaitingScreen {...commonProps} message="Waiting…" />{AdminBar}{Toast}</>;
 }

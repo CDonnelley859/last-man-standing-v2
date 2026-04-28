@@ -31,7 +31,7 @@ const CTA = {
   boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.07) inset',
 };
 
-export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame }) {
+export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, onContinueGameWithTab }) {
   const [mode, setMode] = useState('join');
   const [joinCode, setJoinCode] = useState('');
   const [joinName, setJoinName] = useState('');
@@ -80,14 +80,29 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame })
                   key={g.code}
                   accent={g.role === 'host' ? 'lime' : 'teal'}
                   onClick={() => onContinueGame(g.code)}
-                  style={{ padding: '13px 16px 13px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                  style={{ padding: '13px 16px 13px 20px', cursor: 'pointer' }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: C.dark, marginBottom: 3 }}>{g.gameName || g.code}</div>
-                    <div style={{ fontSize: 11, color: C.g4 }}>{g.role === 'host' ? 'Host' : g.name}</div>
-                  </div>
-                  <div style={{ background: C.teal, color: C.white, borderRadius: '8px 8px 8px 2px', padding: '4px 9px', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(28,191,160,0.45)' }}>
-                    {g.code}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: C.dark, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.gameName || g.code}</div>
+                      <div style={{ fontSize: 11, color: C.g4 }}>{g.role === 'host' ? 'Host' : g.name}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      {g.role === 'host' && (
+                        <button
+                          onClick={e => { e.stopPropagation(); onContinueGame(g.code); }}
+                          style={{
+                            background: C.dark, color: C.white, border: 'none', cursor: 'pointer',
+                            borderRadius: '8px 8px 8px 2px', padding: '5px 10px',
+                            fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 9,
+                            letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                          }}
+                        >⚙ ADMIN</button>
+                      )}
+                      <div style={{ background: C.teal, color: C.white, borderRadius: '8px 8px 8px 2px', padding: '4px 9px', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(28,191,160,0.45)' }}>
+                        {g.code}
+                      </div>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -195,7 +210,16 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame })
         </div>
       </div>
 
-      <BottomNav active="home" onNav={() => {}} isHost={false} />
+      <BottomNav
+        active="home"
+        onNav={tab => {
+          if ((tab === 'pick' || tab === 'stats') && games.length > 0) {
+            // Open the most recently saved game and jump straight to the tapped tab
+            onContinueGame(games[games.length - 1].code, tab);
+          }
+        }}
+        isHost={false}
+      />
     </div>
   );
 }

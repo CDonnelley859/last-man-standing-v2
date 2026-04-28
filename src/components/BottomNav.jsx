@@ -8,7 +8,6 @@ export default function BottomNav({ active, onNav, isHost }) {
     { id: 'pick', label: 'Pick' },
     { id: 'stats', label: 'Stats' },
   ];
-  if (isHost) tabs.push({ id: 'admin', label: 'Admin' });
 
   return (
     <div style={{
