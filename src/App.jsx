@@ -130,14 +130,17 @@ export default function App() {
       if (!snap.exists()) break;
     }
     const gameName = gname || 'Last Man Standing';
-    await set(ref(db, `games/${code}`), {
-      status: 'setup', gameName, winner: null, nextId: 2, cycleStartRound: 1,
+    const initialGameData = {
+      status: 'active', gameName, winner: null, nextId: 2, cycleStartRound: 1,
       players: { p1: { id: 'p1', name, active: true, usedTeams: {}, eliminatedRound: null, cycleWins: 0, seasonPoints: 0 } },
       rounds: {},
-    });
+    };
+    await set(ref(db, `games/${code}`), initialGameData);
     setGameCode(code); setRole('host'); setMyPlayerId('p1'); setMyName(name); setHostView('admin');
     saveGame(code, 'host', 'p1', name, gameName);
     listenToGame(code, 'host');
+    // Auto-activate the current gameweek — no manual steps needed
+    await doActivateGameweek(code, initialGameData);
   }
 
   async function handleJoinGame(code, name, setError) {
@@ -146,13 +149,20 @@ export default function App() {
     const snap = await get(ref(db, `games/${code}`));
     if (!snap.exists()) { setError?.('Game not found — double-check the code.'); return; }
     const game = snap.val();
-    if (game.status !== 'setup') { setError?.('That game has already started — ask the host for a new game.'); return; }
+    if (game.status === 'complete') { setError?.('That game has already finished.'); return; }
     const taken = Object.values(game.players || {}).some(p => p.name.toLowerCase() === name.toLowerCase());
     if (taken) { setError?.('That name is already taken. Try a different one.'); return; }
     const nextId = game.nextId || 1;
     const pid = 'p' + nextId;
-    await set(ref(db, `games/${code}/players/${pid}`), { id: pid, name, active: true, usedTeams: {}, eliminatedRound: null, cycleWins: 0, seasonPoints: 0 });
-    await set(ref(db, `games/${code}/nextId`), nextId + 1);
+    const activeRound = currentRound(game);
+    const updates = {};
+    updates[`games/${code}/players/${pid}`] = { id: pid, name, active: true, usedTeams: {}, eliminatedRound: null, cycleWins: 0, seasonPoints: 0 };
+    updates[`games/${code}/nextId`] = nextId + 1;
+    // If picks are still open, add the new player to this round so they can pick
+    if (activeRound?.status === 'picking') {
+      updates[`games/${code}/rounds/r${activeRound.id}/picks/${pid}`] = { playerId: pid, team: null, result: null };
+    }
+    await update(ref(db), updates);
     setGameCode(code); setRole('player'); setMyPlayerId(pid); setMyName(name);
     saveGame(code, 'player', pid, name, game.gameName || code);
     listenToGame(code, 'player');
@@ -188,28 +198,28 @@ export default function App() {
     await remove(ref(db, `games/${gameCode}/players/${pid}`));
   }
 
-  async function handleActivateGameweek() {
+  async function doActivateGameweek(code, gameData) {
     try {
       const teams = await fetchTeams().catch(() => null);
-      if (teams) setCachedTeams(teams);
+      if (teams) { setCachedTeams(teams); cachedTeamsRef.current = teams; }
       const fixture = await fetchFixtures();
       setCachedMatchday(fixture); cachedMatchdayRef.current = fixture; setLiveDataError(null);
-      const roundNum = rounds(G).length + 1;
+      const roundNum = rounds(gameData).length + 1;
       const picks = {};
-      activePlayers(G).forEach(p => { picks[p.id] = { playerId: p.id, team: null, result: null }; });
+      activePlayers(gameData).forEach(p => { picks[p.id] = { playerId: p.id, team: null, result: null }; });
       // Store closeTime (1 hr before first kick-off) in Firebase so all clients can display countdown
       const closeTime = fixture.firstKickoff
         ? new Date(new Date(fixture.firstKickoff).getTime() - 60 * 60 * 1000).toISOString()
         : null;
-      await set(ref(db, `games/${gameCode}/rounds/r${roundNum}`), {
+      await set(ref(db, `games/${code}/rounds/r${roundNum}`), {
         id: roundNum, status: 'picking', picks, winningTeams: {},
         matchday: fixture.matchday, firstKickoff: fixture.firstKickoff || null,
         closeTime,
       });
-      scheduleAutoClose(fixture.firstKickoff, gameCode, G);
+      scheduleAutoClose(fixture.firstKickoff, code, gameData);
       // Auto-copy a WhatsApp-ready message for players
       try {
-        const url = `${location.origin}${location.pathname}?join=${gameCode}`;
+        const url = `${location.origin}${location.pathname}?join=${code}`;
         const deadlineStr = closeTime
           ? new Date(closeTime).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
           : 'kick-off';
@@ -222,6 +232,10 @@ export default function App() {
     }
   }
 
+  async function handleActivateGameweek() {
+    await doActivateGameweek(gameCode, G);
+  }
+
   async function handleStartRound() {
     const roundNum = rounds(G).length + 1;
     const picks = {};
@@ -231,10 +245,25 @@ export default function App() {
 
   async function handleLockPicks() {
     const round = currentRound(G);
+    if (!round) return;
     const picks = Object.values(round.picks || {});
-    if (!picks.every(p => p.team)) { alert('Not everyone has picked yet — wait for all picks before locking.'); return; }
     const updates = {};
-    picks.forEach(pick => { updates[`games/${gameCode}/players/${pick.playerId}/usedTeams/${pick.team}`] = true; });
+    const teams = getTeams();
+    // Auto-assign any player who hasn't picked yet (respects their preference list)
+    picks.filter(p => !p.team).forEach(pick => {
+      const player = getPlayer(G, pick.playerId);
+      const usedTeams = player?.usedTeams || {};
+      const prefs = player?.pickPrefs || [];
+      const firstFree = prefs.find(t => !usedTeams[t]) || teams.find(t => !usedTeams[t]);
+      if (firstFree) {
+        updates[`games/${gameCode}/rounds/r${round.id}/picks/${pick.playerId}/team`] = firstFree;
+        updates[`games/${gameCode}/rounds/r${round.id}/picks/${pick.playerId}/autoPicked`] = true;
+      }
+    });
+    picks.forEach(pick => {
+      const team = updates[`games/${gameCode}/rounds/r${round.id}/picks/${pick.playerId}/team`] || pick.team;
+      if (team) updates[`games/${gameCode}/players/${pick.playerId}/usedTeams/${team}`] = true;
+    });
     updates[`games/${gameCode}/rounds/r${round.id}/status`] = 'results';
     await update(ref(db), updates);
     startResultsPolling(gameCode, G);
