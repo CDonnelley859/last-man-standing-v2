@@ -47,7 +47,7 @@ export default function CompleteScreen({ G, myPlayerId, role, onReset, onLeave, 
         <Card style={{ padding: '12px 16px' }}>
           <button
             onClick={isHost ? onReset : onLeave}
-            style={{ width: '100%', height: 44, borderRadius: '12px 12px 12px 4px', border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.teal}, ${C.tealMid})`, color: C.white, fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 12, letterSpacing: '0.06em', boxShadow: '0 3px 12px rgba(28,191,160,0.35)' }}
+            style={{ width: '100%', height: 44, borderRadius: '12px 12px 12px 4px', border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${C.teal}, ${C.tealMid})`, color: C.white, fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 12, letterSpacing: '0.06em', boxShadow: '0 3px 12px rgba(233,0,82,0.35)' }}
           >
             {isHost ? 'START A NEW GAME' : 'LEAVE GAME'}
           </button>

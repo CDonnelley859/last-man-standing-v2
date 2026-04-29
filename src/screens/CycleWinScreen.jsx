@@ -10,7 +10,7 @@ const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
   delay:    (i * 0.11) % 2.5,
   duration: 2.4 + (i % 5) * 0.35,
   round:    i % 3 === 0,
-  color:    ['#C8F06A', 'rgba(255,255,255,0.85)', 'rgba(28,191,160,0.9)', '#fbbf24', '#f472b6'][i % 5],
+  color:    ['#e90052', 'rgba(255,255,255,0.85)', 'rgba(233,0,82,0.7)', '#fbbf24', '#ff80ab'][i % 5],
 }));
 
 export default function CycleWinScreen({ G, gameCode, myPlayerId, role, round, onNav }) {
@@ -104,7 +104,7 @@ export default function CycleWinScreen({ G, gameCode, myPlayerId, role, round, o
               height: 52, borderRadius: '14px 14px 14px 4px', border: 'none', cursor: 'pointer',
               background: C.lime, color: C.dark, fontFamily: 'Inter, sans-serif',
               fontWeight: 800, fontSize: 13, letterSpacing: '0.08em',
-              boxShadow: '0 4px 24px rgba(200,240,106,0.55)',
+              boxShadow: '0 4px 24px rgba(233,0,82,0.55)',
             }}
           >
             📋 SHARE VICTORY

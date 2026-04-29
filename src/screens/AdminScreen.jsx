@@ -14,9 +14,9 @@ const BTN_DARK = {
 };
 const BTN_TEAL = {
   height: 44, borderRadius: '12px 12px 12px 4px', border: 'none', cursor: 'pointer',
-  background: `linear-gradient(135deg, #1CBFA0, #15a087)`, color: '#fff',
+  background: `linear-gradient(135deg, #e90052, #c4003f)`, color: '#fff',
   fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 12, letterSpacing: '0.06em',
-  boxShadow: '0 3px 12px rgba(28,191,160,0.35)', width: '100%',
+  boxShadow: '0 3px 12px rgba(233,0,82,0.35)', width: '100%',
 };
 const BTN_WHITE = {
   height: 44, borderRadius: '12px 12px 12px 4px', border: `1.5px solid ${C.g2}`, cursor: 'pointer',
@@ -74,7 +74,7 @@ export default function AdminScreen({
 
           {/* Progress bar */}
           <div style={{ height: 6, borderRadius: 3, background: C.g2, marginBottom: 14, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, borderRadius: 3, background: `linear-gradient(90deg, ${C.teal}, ${C.tealMid})`, boxShadow: '0 1px 4px rgba(28,191,160,0.4)', transition: 'width 0.3s' }} />
+            <div style={{ height: '100%', width: `${pct}%`, borderRadius: 3, background: `linear-gradient(90deg, ${C.teal}, ${C.tealMid})`, boxShadow: '0 1px 4px rgba(233,0,82,0.4)', transition: 'width 0.3s' }} />
           </div>
 
           {round.firstKickoff && (

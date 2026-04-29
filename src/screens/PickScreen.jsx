@@ -129,7 +129,7 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
             {selectedTeam || '—'}
           </div>
           {selectedOpp !== '—' && (
-            <div style={{ background: 'rgba(200,240,106,0.18)', color: C.lime, border: '1px solid rgba(200,240,106,0.35)', borderRadius: '10px 10px 10px 4px', padding: '4px 14px', fontWeight: 700, fontSize: 10 }}>
+            <div style={{ background: 'rgba(233,0,82,0.12)', color: C.lime, border: '1px solid rgba(233,0,82,0.3)', borderRadius: '10px 10px 10px 4px', padding: '4px 14px', fontWeight: 700, fontSize: 10 }}>
               vs {selectedOpp}
             </div>
           )}

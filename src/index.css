@@ -6,7 +6,7 @@
 body {
   margin: 0;
   padding: 0;
-  background: #0d1117;
+  background: #0a0010;
   font-family: 'Inter', sans-serif;
 }
 
@@ -18,10 +18,10 @@ body {
 @media (min-width: 520px) {
   body {
     /* Dark background with subtle teal/lime radial glows and a faint dot grid */
-    background-color: #0d1117;
+    background-color: #0a0010;
     background-image:
-      radial-gradient(ellipse 60% 50% at 20% 30%, rgba(28, 191, 160, 0.07) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(200, 240, 106, 0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 20% 30%, rgba(233, 0, 82, 0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(55, 0, 60, 0.12) 0%, transparent 70%),
       radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 28px 28px;
     display: flex;
@@ -35,8 +35,8 @@ body {
     min-width: 480px;
     /* Teal glow + deep shadow to lift the frame off the dark bg */
     box-shadow:
-      0 0 0 1px rgba(28, 191, 160, 0.18),
-      0 0 60px rgba(28, 191, 160, 0.1),
+      0 0 0 1px rgba(233, 0, 82, 0.18),
+      0 0 60px rgba(233, 0, 82, 0.1),
       0 40px 120px rgba(0, 0, 0, 0.85);
     position: relative;
   }

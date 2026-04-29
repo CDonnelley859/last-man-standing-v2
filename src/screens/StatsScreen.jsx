@@ -9,7 +9,7 @@ import Pill from '../components/Pill';
 import { players, activePlayers, getPlayer, rounds, initials } from '../utils';
 import { getTeamAbbr, getTeamColor } from '../teams';
 
-const MEDAL = ['#C8F06A', '#9CA3AF', '#E5E7EB'];
+const MEDAL = ['#e90052', '#9CA3AF', '#E5E7EB'];
 
 function LeaderboardTab({ G, myPlayerId }) {
   const ps = players(G);
@@ -29,7 +29,7 @@ function LeaderboardTab({ G, myPlayerId }) {
     <div style={{ paddingBottom: 8 }}>
       {/* Survivors */}
       <div style={{ padding: '0 20px 8px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: C.lime, borderRadius: 13, padding: '5px 12px', marginBottom: 10, boxShadow: '0 2px 8px rgba(200,240,106,0.4)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: C.lime, borderRadius: 13, padding: '5px 12px', marginBottom: 10, boxShadow: '0 2px 8px rgba(233,0,82,0.4)' }}>
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: C.dark }}>🏆 SURVIVORS</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -146,7 +146,7 @@ function SeasonStatsTab({ G }) {
               <div key={team} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 11, color: C.dark, width: 90, flexShrink: 0 }}>{team}</span>
                 <div style={{ flex: 1, height: 14, borderRadius: 4, background: C.g2, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 4, background: `linear-gradient(90deg, ${C.lime}, ${C.limeDark})`, width: `${(count / maxCount) * 100}%`, boxShadow: '0 1px 4px rgba(200,240,106,0.5)' }} />
+                  <div style={{ height: '100%', borderRadius: 4, background: `linear-gradient(90deg, ${C.lime}, ${C.limeDark})`, width: `${(count / maxCount) * 100}%`, boxShadow: '0 1px 4px rgba(255,255,255,0.2)' }} />
                 </div>
                 <span style={{ fontSize: 11, color: C.g4, width: 14, textAlign: 'right', flexShrink: 0 }}>{count}</span>
               </div>

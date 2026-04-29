@@ -28,9 +28,9 @@ const INPUT_TEXT = {
 
 const CTA = {
   width: '100%', height: 52, borderRadius: 14, border: 'none', cursor: 'pointer',
-  background: `linear-gradient(135deg, #1a1a1a, #111111)`, color: 'white',
+  background: `linear-gradient(135deg, #4a0055, #37003c)`, color: 'white',
   fontFamily: 'Inter, sans-serif', fontWeight: 800, fontSize: 14, letterSpacing: '0.12em',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.07) inset',
+  boxShadow: '0 4px 20px rgba(55,0,60,0.5), 0 1px 0 rgba(255,255,255,0.1) inset',
 };
 
 export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, onContinueGameWithTab }) {
@@ -140,7 +140,7 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 11, color: C.g4 }}>{g.role === 'host' ? 'Host' : g.name}</span>
                         {g.role !== 'host' && playerStatus[g.code] === 'alive' && (
-                          <span style={{ fontSize: 9, fontWeight: 700, color: '#1cbfa0', letterSpacing: '0.06em' }}>● ALIVE</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: '#e90052', letterSpacing: '0.06em' }}>● ALIVE</span>
                         )}
                         {g.role !== 'host' && playerStatus[g.code] === 'eliminated' && (
                           <span style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}>✕ OUT</span>
@@ -162,7 +162,7 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
                       )}
                       <div
                         onClick={e => handleShareCode(e, g.code)}
-                        style={{ background: sharedCode === g.code ? '#16a37a' : C.teal, color: C.white, borderRadius: '8px 8px 8px 2px', padding: '4px 9px', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(28,191,160,0.45)', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }}
+                        style={{ background: sharedCode === g.code ? '#c4003f' : C.teal, color: C.white, borderRadius: '8px 8px 8px 2px', padding: '4px 9px', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', boxShadow: '0 2px 6px rgba(233,0,82,0.45)', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }}
                         title="Tap to share join link"
                       >
                         {sharedCode === g.code ? '✓ COPIED' : g.code}
