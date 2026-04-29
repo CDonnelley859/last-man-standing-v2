@@ -2,7 +2,7 @@ import { C } from '../tokens';
 
 export default function SegTabs({ tabs, active, onChange }) {
   return (
-    <div style={{ display: 'flex', background: 'rgb(15,158,131)', borderRadius: 10, padding: 3, gap: 2 }}>
+    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', borderRadius: 10, padding: 3, gap: 2 }}>
       {tabs.map(t => (
         <button
           key={t}
