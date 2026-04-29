@@ -14,10 +14,9 @@ body {
   min-height: 100vh;
 }
 
-/* ── Desktop: centre the app in a "phone frame" ── */
-@media (min-width: 520px) {
+/* ── Tablet: centre the app in a "phone frame" ── */
+@media (min-width: 520px) and (max-width: 1199px) {
   body {
-    /* Dark background with subtle teal/lime radial glows and a faint dot grid */
     background-color: #0a0010;
     background-image:
       radial-gradient(ellipse 60% 50% at 20% 30%, rgba(233, 0, 82, 0.07) 0%, transparent 70%),
@@ -33,11 +32,24 @@ body {
   #app-shell {
     width: 480px;
     min-width: 480px;
-    /* Teal glow + deep shadow to lift the frame off the dark bg */
     box-shadow:
       0 0 0 1px rgba(233, 0, 82, 0.18),
       0 0 60px rgba(233, 0, 82, 0.1),
       0 40px 120px rgba(0, 0, 0, 0.85);
     position: relative;
+  }
+}
+
+/* ── Wide desktop: full width for dashboard layout ── */
+@media (min-width: 1200px) {
+  body {
+    display: block;
+    min-height: 100vh;
+  }
+
+  #app-shell {
+    width: 100%;
+    min-width: 0;
+    box-shadow: none;
   }
 }
