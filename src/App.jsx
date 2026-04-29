@@ -19,8 +19,22 @@ import EliminatedScreen from './screens/EliminatedScreen';
 import RoundDoneScreen from './screens/RoundDoneScreen';
 import CompleteScreen from './screens/CompleteScreen';
 import CycleWinScreen from './screens/CycleWinScreen';
+import DashboardView from './screens/DashboardView';
+
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return width;
+}
 
 export default function App() {
+  const windowWidth = useWindowWidth();
+  const isWide = windowWidth >= 1200;
+
   const [gameCode, setGameCode] = useState(null);
   const [role, setRole] = useState(null);
   const [myPlayerId, setMyPlayerId] = useState(null);
@@ -486,6 +500,32 @@ export default function App() {
   const round = currentRound(G);
   const myPlayer = getPlayer(G, myPlayerId);
   const commonProps = { G, gameCode, myPlayerId, role, round, onNav: handleNav };
+
+  // ── Desktop dashboard — wide screens only, active games only ─────────────
+  if (isWide && G.status === 'active') {
+    return (
+      <>
+        <DashboardView
+          {...commonProps}
+          cachedMatchday={cachedMatchday}
+          teams={getTeams()}
+          pickPrefs={myPlayer?.pickPrefs || []}
+          onPick={handlePlayerPick}
+          onUpdatePickPrefs={handleUpdatePickPrefs}
+          onActivateGameweek={handleActivateGameweek}
+          onStartRound={handleStartRound}
+          onLockPicks={handleLockPicks}
+          onSubmitResults={handleSubmitResults}
+          onReminder={handleReminder}
+          onRefreshResults={handleRefreshResults}
+          liveDataError={liveDataError}
+          lastResultsCheck={lastResultsCheck}
+          onLeave={role !== 'host' ? handleLeave : undefined}
+        />
+        {Toast}
+      </>
+    );
+  }
 
   if (G.status === 'complete') {
     return <><CompleteScreen {...commonProps} onReset={handleReset} onLeave={handleLeave} />{Toast}</>;
