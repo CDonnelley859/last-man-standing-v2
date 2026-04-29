@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import { getPlayer, formatCountdown, formatMatchTime } from '../utils';
 import { getTeamColor, getTeamAbbr } from '../teams';
 
-export default function PickScreen({ G, gameCode, myPlayerId, role, round, cachedMatchday, teams, pickPrefs, onPick, onUpdatePickPrefs, onNav }) {
+export default function PickScreen({ G, gameCode, myPlayerId, role, round, cachedMatchday, teams, pickPrefs, onPick, onUpdatePickPrefs, onNav, isEliminated }) {
   const myPick = (round?.picks || {})[myPlayerId];
   const myPlayer = getPlayer(G, myPlayerId);
   const usedTeams = myPlayer?.usedTeams || {};
@@ -29,7 +29,7 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
   }, [closeTime]);
 
   async function handlePick(team) {
-    if (!team) return;
+    if (!team || isEliminated) return;
     setConfirmed(team);
     setAnimKey(k => k + 1);
     await onPick(team);
@@ -99,8 +99,21 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
               {G.gameName}
             </div>
           )}
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.5)' }}>SELECT YOUR TEAM</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.5)' }}>
+            {isEliminated ? 'SPECTATING THIS ROUND' : 'SELECT YOUR TEAM'}
+          </div>
         </div>
+
+        {/* Spectator notice for eliminated players */}
+        {isEliminated && (
+          <div style={{ margin: '0 20px 16px', background: 'rgba(254,226,226,0.12)', border: '1px solid rgba(254,226,226,0.3)', borderRadius: 12, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>👀</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.white }}>You're out this cycle</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>Watching the fixtures — picks are disabled</div>
+            </div>
+          </div>
+        )}
 
         {/* Countdown */}
         {closeTime && (
@@ -166,8 +179,8 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                     <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px 6px', gap: 6 }}>
                       {/* Home */}
                       <div
-                        onClick={() => !homeUsed && handlePick(homeName)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, cursor: homeUsed ? 'default' : 'pointer', opacity: homeUsed ? 0.4 : 1 }}
+                        onClick={() => !homeUsed && !isEliminated && handlePick(homeName)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, cursor: (homeUsed || isEliminated) ? 'default' : 'pointer', opacity: homeUsed ? 0.4 : 1 }}
                       >
                         <div style={{
                           width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
@@ -189,8 +202,8 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
 
                       {/* Away */}
                       <div
-                        onClick={() => !awayUsed && handlePick(awayName)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end', cursor: awayUsed ? 'default' : 'pointer', opacity: awayUsed ? 0.4 : 1 }}
+                        onClick={() => !awayUsed && !isEliminated && handlePick(awayName)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end', cursor: (awayUsed || isEliminated) ? 'default' : 'pointer', opacity: awayUsed ? 0.4 : 1 }}
                       >
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ fontWeight: 800, fontSize: 12, color: C.dark, lineHeight: 1.3 }}>{awayName}</div>
@@ -240,14 +253,14 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
                 return (
                   <div
                     key={team}
-                    onClick={() => !used && handlePick(team)}
+                    onClick={() => !used && !isEliminated && handlePick(team)}
                     style={{
                       background: sel ? color : C.white,
                       borderRadius: 10,
                       padding: '10px 8px',
                       textAlign: 'center',
                       opacity: used ? 0.4 : 1,
-                      cursor: used ? 'default' : 'pointer',
+                      cursor: (used || isEliminated) ? 'default' : 'pointer',
                       boxShadow: sel ? `0 0 0 3px ${color}, 0 4px 14px ${color}55` : '0 2px 8px rgba(0,0,0,0.12)',
                     }}
                   >
@@ -260,8 +273,8 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
           </div>
         )}
 
-        {/* Auto-pick preferences */}
-        {onUpdatePickPrefs && (
+        {/* Auto-pick preferences — hidden for spectating eliminated players */}
+        {onUpdatePickPrefs && !isEliminated && (
           <div style={{ padding: '12px 20px 0' }}>
             <button
               onClick={() => setShowPrefs(p => !p)}

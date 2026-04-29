@@ -519,14 +519,12 @@ export default function App() {
     return <><StatsScreen {...commonProps} cachedMatchday={cachedMatchday} onLeave={role !== 'host' ? handleLeave : undefined} />{Toast}</>;
   }
 
-  if (!myPlayer?.active) {
-    return <><EliminatedScreen {...commonProps} />{Toast}</>;
-  }
-
   if (!round) {
+    if (!myPlayer?.active) return <><EliminatedScreen {...commonProps} />{Toast}</>;
     return <><WaitingScreen {...commonProps} message="Waiting for the host to start the next round…" />{Toast}</>;
   }
 
+  // Eliminated players can view the pick page as spectators — they just can't pick
   if (round.status === 'picking') {
     return (
       <>
@@ -537,10 +535,15 @@ export default function App() {
           pickPrefs={myPlayer?.pickPrefs || []}
           onPick={handlePlayerPick}
           onUpdatePickPrefs={handleUpdatePickPrefs}
+          isEliminated={!myPlayer?.active}
         />
         {Toast}
       </>
     );
+  }
+
+  if (!myPlayer?.active) {
+    return <><EliminatedScreen {...commonProps} />{Toast}</>;
   }
 
   if (round.status === 'results') {
