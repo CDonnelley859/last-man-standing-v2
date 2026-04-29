@@ -201,7 +201,7 @@ function PickHistoryTab({ G, myPlayerId }) {
         ))}
 
         <div style={{ margin: '10px 16px 0', fontSize: 9, color: C.g3 }}>
-          Teal = survived · Red = eliminated
+          Pink = survived · Red = eliminated
         </div>
       </Card>
     </div>

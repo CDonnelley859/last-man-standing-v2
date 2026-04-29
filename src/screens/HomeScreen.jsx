@@ -112,9 +112,9 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
       <div style={{ ...WRAP, position: 'relative', zIndex: 1, padding: '56px 20px 0' }}>
         {/* Hero */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>LAST MAN</div>
-          <div style={{ fontSize: 38, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>STANDING</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>Premier League 2024/25</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: C.white, lineHeight: 1, letterSpacing: '-0.02em' }}>LAST MAN</div>
+          <div style={{ fontSize: 52, fontWeight: 900, color: C.white, lineHeight: 0.95, letterSpacing: '-0.03em', marginBottom: 6 }}>STANDING</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Premier League 2024/25</div>
         </div>
 
         {/* Saved games */}
