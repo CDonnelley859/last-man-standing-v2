@@ -10,7 +10,7 @@ export default function BottomNav({ active, onNav, isHost }) {
   ];
 
   return (
-    <div style={{
+    <div className="bottom-nav" style={{
       position: 'fixed', bottom: 16,
       left: 'max(16px, calc(50vw - 224px))',
       right: 'max(16px, calc(50vw - 224px))',

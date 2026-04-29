@@ -52,4 +52,8 @@ body {
     min-width: 0;
     box-shadow: none;
   }
+
+  .bottom-nav {
+    display: none;
+  }
 }
