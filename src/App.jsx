@@ -91,8 +91,8 @@ export default function App() {
       GRef.current = data;
       const round = currentRound(data);
 
-      // Re-fetch fixture data if we're in a picking round but lost cachedMatchday (e.g. page refresh)
-      if (round?.status === 'picking' && round.matchday && !cachedMatchdayRef.current) {
+      // Re-fetch fixture data if we're in a picking or results round but lost cachedMatchday (e.g. page refresh)
+      if ((round?.status === 'picking' || round?.status === 'results') && round.matchday && !cachedMatchdayRef.current) {
         fetchMatchdayMatches(round.matchday).then(matches => {
           const fixture = { matchday: round.matchday, matches, firstKickoff: round.firstKickoff || null };
           setCachedMatchday(fixture);
@@ -104,13 +104,15 @@ export default function App() {
         fetchTeams().then(t => { setCachedTeams(t); cachedTeamsRef.current = t; }).catch(() => {});
       }
 
-      if (rle === 'host') {
-        if (round?.status === 'picking' && round.firstKickoff && !autoCloseRef.current) {
-          scheduleAutoClose(round.firstKickoff, code, data);
-        }
-        if (round?.status === 'results' && !pollingRef.current) {
-          startResultsPolling(code, data);
-        }
+      // Auto-close picks: host only (one device should manage the timer)
+      if (rle === 'host' && round?.status === 'picking' && round.firstKickoff && !autoCloseRef.current) {
+        scheduleAutoClose(round.firstKickoff, code, data);
+      }
+
+      // Results polling: ALL connected clients check for finished matches.
+      // applyResults guards against double-write by checking round.status === 'results' before writing.
+      if (round?.status === 'results' && !pollingRef.current) {
+        startResultsPolling(code, data);
       }
     });
     listenerRef.current = code;
