@@ -165,8 +165,8 @@ function PickHistoryTab({ G, myPlayerId }) {
     return <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textAlign: 'center', padding: '24px 20px' }}>No completed rounds yet.</div>;
   }
 
-  const DOT_COL = { win: C.teal, out: C.red, null: C.g2 };
-  const TXT_COL = { win: C.teal, out: C.red, null: C.g3 };
+  const DOT_COL = { win: '#22c55e', out: C.red, null: C.g2 };
+  const TXT_COL = { win: '#16a34a', out: C.red, null: C.g3 };
 
   return (
     <div style={{ padding: '0 20px', paddingBottom: 8 }}>
@@ -201,7 +201,7 @@ function PickHistoryTab({ G, myPlayerId }) {
         ))}
 
         <div style={{ margin: '10px 16px 0', fontSize: 9, color: C.g3 }}>
-          Pink = survived · Red = eliminated
+          Green = survived · Red = eliminated
         </div>
       </Card>
     </div>
