@@ -273,6 +273,60 @@ export default function PickScreen({ G, gameCode, myPlayerId, role, round, cache
           </div>
         )}
 
+        {/* This week's picks — all players */}
+        {round?.picks && Object.keys(round.picks).length > 0 && (
+          <div style={{ padding: '16px 20px 0' }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+              THIS WEEK'S PICKS
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {Object.values(G?.players || {})
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(player => {
+                  const pick = (round.picks || {})[player.id];
+                  if (!pick) return null;
+                  const hasTeam = !!pick.team;
+                  const isMe = player.id === myPlayerId;
+                  const color = hasTeam ? getTeamColor(pick.team) : null;
+                  const abbr = hasTeam ? getTeamAbbr(pick.team) : null;
+                  return (
+                    <div key={player.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      background: isMe ? 'rgba(233,0,82,0.15)' : 'rgba(255,255,255,0.08)',
+                      border: isMe ? '1px solid rgba(233,0,82,0.35)' : '1px solid transparent',
+                      borderRadius: 10, padding: '10px 14px',
+                      opacity: player.active === false ? 0.55 : 1,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: C.white }}>{player.name}</span>
+                        {isMe && <span style={{ fontSize: 8, fontWeight: 700, color: C.teal, letterSpacing: '0.06em' }}>YOU</span>}
+                        {player.active === false && <span style={{ fontSize: 8, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em' }}>OUT</span>}
+                        {pick.autoPicked && <span style={{ fontSize: 8, fontWeight: 700, color: '#f59e0b', letterSpacing: '0.06em' }}>AUTO</span>}
+                      </div>
+                      {isMe && hasTeam ? (
+                        // Your own pick — show the team
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <div style={{
+                            width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                            background: `radial-gradient(circle at 35% 35%, ${color}cc, ${color})`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 8, fontWeight: 900, color: 'white',
+                          }}>{abbr}</div>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: C.white }}>{pick.team}</span>
+                        </div>
+                      ) : !isMe && hasTeam ? (
+                        // Someone else has picked — hide which team until picks close
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#4ade80' }}>✓ Picked</span>
+                      ) : (
+                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>Not picked yet</span>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
         {/* Auto-pick preferences — hidden for spectating eliminated players */}
         {onUpdatePickPrefs && !isEliminated && (
           <div style={{ padding: '12px 20px 0' }}>

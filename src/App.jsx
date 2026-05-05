@@ -104,8 +104,8 @@ export default function App() {
         fetchTeams().then(t => { setCachedTeams(t); cachedTeamsRef.current = t; }).catch(() => {});
       }
 
-      // Auto-close picks: host only (one device should manage the timer)
-      if (rle === 'host' && round?.status === 'picking' && round.firstKickoff && !autoCloseRef.current) {
+      // Auto-close picks: all clients run the timer — whichever fires first locks picks
+      if (round?.status === 'picking' && round.firstKickoff && !autoCloseRef.current) {
         scheduleAutoClose(round.firstKickoff, code, data);
       }
 
@@ -221,6 +221,9 @@ export default function App() {
       const fixture = await fetchFixtures();
       setCachedMatchday(fixture); cachedMatchdayRef.current = fixture; setLiveDataError(null);
       const roundNum = rounds(gameData).length + 1;
+      // Guard: if another client already created this round, skip
+      const existingSnap = await get(ref(db, `games/${code}/rounds/r${roundNum}`));
+      if (existingSnap.exists()) return;
       const picks = {};
       activePlayers(gameData).forEach(p => { picks[p.id] = { playerId: p.id, team: null, result: null }; });
       // Store closeTime (1 hr before first kick-off) in Firebase so all clients can display countdown
@@ -470,6 +473,15 @@ export default function App() {
             const freshRound = currentRound(freshData);
             if (freshRound?.status === 'results') {
               await applyResults(freshRound, Object.values(freshRound.picks || {}), winSet, code, freshData);
+              // Auto-activate the next gameweek — no admin action needed
+              // Re-fetch so we have the post-results state (players reset, round marked done)
+              const updatedSnap = await get(ref(db, `games/${code}`));
+              if (updatedSnap.exists()) {
+                const updatedData = updatedSnap.val();
+                if (updatedData.status === 'active') {
+                  await doActivateGameweek(code, updatedData);
+                }
+              }
             }
           }
         }

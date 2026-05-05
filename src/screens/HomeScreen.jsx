@@ -59,15 +59,18 @@ export default function HomeScreen({ onCreateGame, onJoinGame, onContinueGame, o
         if (playerSnap.exists()) {
           const p = playerSnap.val();
           setPlayerStatus(prev => ({ ...prev, [g.code]: p.active ? 'alive' : 'eliminated' }));
-        }
-        // Check for a pending pick
-        const roundsSnap = await get(ref(db, `games/${g.code}/rounds`));
-        if (!roundsSnap.exists()) return;
-        const allRounds = Object.values(roundsSnap.val()).sort((a, b) => a.id - b.id);
-        const round = allRounds[allRounds.length - 1];
-        if (round?.status === 'picking') {
-          const pick = (round.picks || {})[g.pid];
-          if (!pick?.team) setNeedsPick(prev => ({ ...prev, [g.code]: true }));
+          // Only show "Pick needed" for active (non-eliminated) players
+          if (p.active) {
+            const roundsSnap = await get(ref(db, `games/${g.code}/rounds`));
+            if (roundsSnap.exists()) {
+              const allRounds = Object.values(roundsSnap.val()).sort((a, b) => a.id - b.id);
+              const round = allRounds[allRounds.length - 1];
+              if (round?.status === 'picking') {
+                const pick = (round.picks || {})[g.pid];
+                if (!pick?.team) setNeedsPick(prev => ({ ...prev, [g.code]: true }));
+              }
+            }
+          }
         }
       } catch {}
     });
