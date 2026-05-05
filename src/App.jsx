@@ -442,7 +442,15 @@ export default function App() {
       if (!round || round.status !== 'results') { clearInterval(pollingRef.current); pollingRef.current = null; return; }
       setLastResultsCheck(new Date());
       try {
-        const md = cachedMatchdayRef.current;
+        let md = cachedMatchdayRef.current;
+        // If matchday data isn't cached yet (e.g. app just opened), fetch it now
+        // so the very first check works immediately rather than waiting 5 minutes
+        if (!md?.matchday && round.matchday) {
+          const freshMatches = await fetchMatchdayMatches(round.matchday);
+          md = { matchday: round.matchday, matches: freshMatches, firstKickoff: round.firstKickoff || null };
+          setCachedMatchday(md);
+          cachedMatchdayRef.current = md;
+        }
         if (!md?.matchday) return;
         const matches = await fetchMatchdayMatches(md.matchday);
         setCachedMatchday(prev => prev ? { ...prev, matches } : prev);
